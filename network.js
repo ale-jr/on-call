@@ -2,6 +2,8 @@ const http = require("http")
 const { Bonjour } = require("bonjour-service")
 const { fetch } = require("undici")
 
+const { ipcMain, BrowserWindow, Notification } = require('electron')
+
 const bonjourInstance = new Bonjour()
 const BONJOUR_PREFIX = "oncall-"
 const createNetwork = (onReceive) => {
@@ -16,6 +18,21 @@ const createNetwork = (onReceive) => {
 
         req.on("end", () => {
             console.log("data", message)
+
+
+            const messageObject = JSON.parse(message)
+
+            onReceive(messageObject)
+
+            if (messageObject?.isRecording !== undefined) {
+                console.log("notification")
+
+                const title = messageObject?.isRecording ? "Microfone sendo usado" : "Microfone parou de ser usado"
+                new Notification({
+                    title
+                }).show()
+                //BrowserWindow.getAllWindows()[0].webContents.send('notification', messageObject?.isRecording)
+            }
             resp.writeHead(200)
             resp.end()
         })
